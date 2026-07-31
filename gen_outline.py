@@ -37,14 +37,14 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-seed = (BASE_DIR / "seed.txt").read_text()
-world = (BASE_DIR / "world.md").read_text()
-characters = (BASE_DIR / "characters.md").read_text()
-mystery = (BASE_DIR / "MYSTERY.md").read_text()
-craft = (BASE_DIR / "CRAFT.md").read_text()
+seed = (BASE_DIR / "seed.txt").read_text(encoding="utf-8")
+world = (BASE_DIR / "world.md").read_text(encoding="utf-8")
+characters = (BASE_DIR / "characters.md").read_text(encoding="utf-8")
+mystery = (BASE_DIR / "MYSTERY.md").read_text(encoding="utf-8")
+craft = (BASE_DIR / "CRAFT.md").read_text(encoding="utf-8")
 
 # Voice Part 2 only
-voice = (BASE_DIR / "voice.md").read_text()
+voice = (BASE_DIR / "voice.md").read_text(encoding="utf-8")
 voice_lines = voice.split('\n')
 part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
 voice_part2 = '\n'.join(voice_lines[part2_start:])
@@ -131,4 +131,11 @@ CONSTRAINTS:
 
 print("Calling writer model...", file=sys.stderr)
 result = call_writer(prompt)
+
+out_path = BASE_DIR / "outline.md"
+out_path.write_text(result, encoding="utf-8")
+# Snapshot so gen_outline_part2.py has a stable part-1 handoff even if
+# outline.md already holds a previous run's merged part1+part2 content.
+(BASE_DIR / ".outline_part1.md").write_text(result, encoding="utf-8")
+print(f"Saved to {out_path}", file=sys.stderr)
 print(result)

@@ -35,8 +35,19 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-part1 = open('/tmp/outline_output.md').read()
-mystery = (BASE_DIR / "MYSTERY.md").read_text()
+outline_path = BASE_DIR / "outline.md"
+part1_snapshot = BASE_DIR / ".outline_part1.md"
+if not part1_snapshot.exists():
+    sys.exit(
+        f"ERROR: {part1_snapshot} not found. Run gen_outline.py first — "
+        "outline.md may already hold merged part1+part2 content and can't "
+        "be reliably reused as a fresh part-1 input."
+    )
+# Read from the stable part-1 snapshot gen_outline.py writes alongside
+# outline.md (rather than outline.md itself), so a re-run of this script
+# never appends onto its own previous merged output.
+part1 = part1_snapshot.read_text(encoding="utf-8")
+mystery = (BASE_DIR / "MYSTERY.md").read_text(encoding="utf-8")
 
 prompt = f"""Here are the first 17 chapters of a 24-chapter outline for "The Second Son of the House of Bells."
 The outline was cut off mid-chapter-17. Continue from where it left off, then complete chapters 18-24,
@@ -79,4 +90,7 @@ REMEMBER:
 
 print("Calling writer model...", file=sys.stderr)
 result = call_writer(prompt)
+
+outline_path.write_text(part1 + "\n\n" + result, encoding="utf-8")
+print(f"Saved to {outline_path}", file=sys.stderr)
 print(result)

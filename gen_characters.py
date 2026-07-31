@@ -39,11 +39,11 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-seed = (BASE_DIR / "seed.txt").read_text()
-world = (BASE_DIR / "world.md").read_text()
+seed = (BASE_DIR / "seed.txt").read_text(encoding="utf-8")
+world = (BASE_DIR / "world.md").read_text(encoding="utf-8")
 
 # Voice Part 2 only
-voice = (BASE_DIR / "voice.md").read_text()
+voice = (BASE_DIR / "voice.md").read_text(encoding="utf-8")
 voice_lines = voice.split('\n')
 part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
 voice_part2 = '\n'.join(voice_lines[part2_start:])
@@ -145,4 +145,8 @@ IMPORTANT:
 
 print("Calling writer model...", file=sys.stderr)
 result = call_writer(prompt)
+
+out_path = BASE_DIR / "characters.md"
+out_path.write_text(result, encoding="utf-8")
+print(f"Saved to {out_path}", file=sys.stderr)
 print(result)

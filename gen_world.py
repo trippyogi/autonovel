@@ -40,9 +40,9 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-seed = (BASE_DIR / "seed.txt").read_text()
-voice = (BASE_DIR / "voice.md").read_text()
-craft = (BASE_DIR / "CRAFT.md").read_text()
+seed = (BASE_DIR / "seed.txt").read_text(encoding="utf-8")
+voice = (BASE_DIR / "voice.md").read_text(encoding="utf-8")
+craft = (BASE_DIR / "CRAFT.md").read_text(encoding="utf-8")
 
 # Extract voice Part 2 only (the novel-specific voice)
 voice_lines = voice.split('\n')
@@ -123,4 +123,8 @@ IMPORTANT:
 
 print("Calling writer model...", file=sys.stderr)
 result = call_writer(prompt)
+
+out_path = BASE_DIR / "world.md"
+out_path.write_text(result, encoding="utf-8")
+print(f"Saved to {out_path}", file=sys.stderr)
 print(result)
