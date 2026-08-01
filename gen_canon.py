@@ -37,11 +37,12 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-world = (BASE_DIR / "world.md").read_text(encoding="utf-8")
-characters = (BASE_DIR / "characters.md").read_text(encoding="utf-8")
-seed = (BASE_DIR / "seed.txt").read_text(encoding="utf-8")
+def build_prompt(base_dir):
+    world = (base_dir / "world.md").read_text(encoding="utf-8")
+    characters = (base_dir / "characters.md").read_text(encoding="utf-8")
+    seed = (base_dir / "seed.txt").read_text(encoding="utf-8")
 
-prompt = f"""Extract EVERY hard fact from these planning documents into a structured canon database.
+    return f"""Extract EVERY hard fact from these planning documents into a structured canon database.
 A "hard fact" is anything a writer must not contradict: names, ages, dates, physical descriptions,
 rules of the magic system, geography, relationships, established events.
 
@@ -90,10 +91,20 @@ RULES:
 - DO NOT invent facts. Only record what's explicitly stated.
 """
 
-print("Calling writer model...", file=sys.stderr)
-result = call_writer(prompt)
 
-out_path = BASE_DIR / "canon.md"
-out_path.write_text(result, encoding="utf-8")
-print(f"Saved to {out_path}", file=sys.stderr)
-print(result)
+def main(base_dir=None):
+    base_dir = base_dir or BASE_DIR
+    prompt = build_prompt(base_dir)
+
+    print("Calling writer model...", file=sys.stderr)
+    result = call_writer(prompt)
+
+    out_path = base_dir / "canon.md"
+    out_path.write_text(result, encoding="utf-8")
+    print(f"Saved to {out_path}", file=sys.stderr)
+    print(result)
+    return result
+
+
+if __name__ == "__main__":
+    main()

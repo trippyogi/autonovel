@@ -40,16 +40,17 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-seed = (BASE_DIR / "seed.txt").read_text(encoding="utf-8")
-voice = (BASE_DIR / "voice.md").read_text(encoding="utf-8")
-craft = (BASE_DIR / "CRAFT.md").read_text(encoding="utf-8")
+def build_prompt(base_dir):
+    seed = (base_dir / "seed.txt").read_text(encoding="utf-8")
+    voice = (base_dir / "voice.md").read_text(encoding="utf-8")
+    craft = (base_dir / "CRAFT.md").read_text(encoding="utf-8")
 
-# Extract voice Part 2 only (the novel-specific voice)
-voice_lines = voice.split('\n')
-part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
-voice_part2 = '\n'.join(voice_lines[part2_start:])
+    # Extract voice Part 2 only (the novel-specific voice)
+    voice_lines = voice.split('\n')
+    part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
+    voice_part2 = '\n'.join(voice_lines[part2_start:])
 
-prompt = f"""Build a complete world bible for this fantasy novel. This is the WORLD.MD file -- 
+    return f"""Build a complete world bible for this fantasy novel. This is the WORLD.MD file -- 
 the definitive reference for everything that EXISTS in this world. A writer should be able 
 to resolve any worldbuilding question from this document alone.
 
@@ -121,10 +122,20 @@ IMPORTANT:
 - Target ~3000-4000 words. Dense, not padded.
 """
 
-print("Calling writer model...", file=sys.stderr)
-result = call_writer(prompt)
 
-out_path = BASE_DIR / "world.md"
-out_path.write_text(result, encoding="utf-8")
-print(f"Saved to {out_path}", file=sys.stderr)
-print(result)
+def main(base_dir=None):
+    base_dir = base_dir or BASE_DIR
+    prompt = build_prompt(base_dir)
+
+    print("Calling writer model...", file=sys.stderr)
+    result = call_writer(prompt)
+
+    out_path = base_dir / "world.md"
+    out_path.write_text(result, encoding="utf-8")
+    print(f"Saved to {out_path}", file=sys.stderr)
+    print(result)
+    return result
+
+
+if __name__ == "__main__":
+    main()

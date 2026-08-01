@@ -39,16 +39,17 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-seed = (BASE_DIR / "seed.txt").read_text(encoding="utf-8")
-world = (BASE_DIR / "world.md").read_text(encoding="utf-8")
+def build_prompt(base_dir):
+    seed = (base_dir / "seed.txt").read_text(encoding="utf-8")
+    world = (base_dir / "world.md").read_text(encoding="utf-8")
 
-# Voice Part 2 only
-voice = (BASE_DIR / "voice.md").read_text(encoding="utf-8")
-voice_lines = voice.split('\n')
-part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
-voice_part2 = '\n'.join(voice_lines[part2_start:])
+    # Voice Part 2 only
+    voice = (base_dir / "voice.md").read_text(encoding="utf-8")
+    voice_lines = voice.split('\n')
+    part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
+    voice_part2 = '\n'.join(voice_lines[part2_start:])
 
-prompt = f"""Build a complete character registry for this fantasy novel. This is CHARACTERS.MD --
+    return f"""Build a complete character registry for this fantasy novel. This is CHARACTERS.MD --
 the definitive reference for WHO exists in this story, what drives them, how they speak,
 and what secrets they carry.
 
@@ -143,10 +144,20 @@ IMPORTANT:
 - Target ~3000-4000 words. Dense character work, not padding.
 """
 
-print("Calling writer model...", file=sys.stderr)
-result = call_writer(prompt)
 
-out_path = BASE_DIR / "characters.md"
-out_path.write_text(result, encoding="utf-8")
-print(f"Saved to {out_path}", file=sys.stderr)
-print(result)
+def main(base_dir=None):
+    base_dir = base_dir or BASE_DIR
+    prompt = build_prompt(base_dir)
+
+    print("Calling writer model...", file=sys.stderr)
+    result = call_writer(prompt)
+
+    out_path = base_dir / "characters.md"
+    out_path.write_text(result, encoding="utf-8")
+    print(f"Saved to {out_path}", file=sys.stderr)
+    print(result)
+    return result
+
+
+if __name__ == "__main__":
+    main()
