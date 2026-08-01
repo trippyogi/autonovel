@@ -108,6 +108,22 @@ class TestGenOutlineStaleSnapshot(FoundationFixtureTestCase):
         outline_path = self.base_dir / "outline.md"
         self.assertEqual(outline_path.read_text(encoding="utf-8"), "FRESH PART 1")
 
+    def test_missing_input_leaves_existing_snapshot_untouched(self):
+        """If loading inputs fails (e.g. a required file is missing), the
+        existing snapshot must not be deleted -- deleting it before the
+        prompt is safely built would strand gen_outline_part2.py with no
+        usable part-1 handoff even though a valid one existed."""
+        snapshot = self.base_dir / ".outline_part1.md"
+        snapshot.write_text("EXISTING VALID PART 1", encoding="utf-8")
+        (self.base_dir / "seed.txt").unlink()
+
+        with mock.patch.object(gen_outline, "call_writer", return_value="SHOULD NOT BE CALLED"):
+            with self.assertRaises(FileNotFoundError):
+                gen_outline.main(base_dir=self.base_dir)
+
+        self.assertTrue(snapshot.exists())
+        self.assertEqual(snapshot.read_text(encoding="utf-8"), "EXISTING VALID PART 1")
+
     def test_writes_outline_and_snapshot_from_clean_state(self):
         snapshot = self.base_dir / ".outline_part1.md"
         self.assertFalse(snapshot.exists())

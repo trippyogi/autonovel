@@ -133,16 +133,19 @@ CONSTRAINTS:
 
 def main(base_dir=None):
     base_dir = base_dir or BASE_DIR
+    part1_snapshot = base_dir / ".outline_part1.md"
+
+    # Load inputs and build the prompt first, so a missing/unreadable input
+    # file (seed.txt, world.md, etc.) fails loudly without touching the
+    # existing snapshot.
+    prompt = build_prompt(base_dir)
 
     # Clear any stale part-1 snapshot from a prior foundation iteration before
     # calling the model. The snapshot is gitignored, so `git reset --hard`
     # during foundation retries does not remove it — if this run fails before
     # reaching the write below, a leftover snapshot from an earlier iteration
     # could otherwise be picked up by gen_outline_part2.py.
-    part1_snapshot = base_dir / ".outline_part1.md"
     part1_snapshot.unlink(missing_ok=True)
-
-    prompt = build_prompt(base_dir)
 
     print("Calling writer model...", file=sys.stderr)
     result = call_writer(prompt)
